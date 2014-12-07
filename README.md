@@ -5,7 +5,7 @@ Complete Hue API 1.4.0 (http://www.developers.meethue.com/philips-hue-api) as An
 ```javascript
 // Get all lights
 hue.getLights().then(function(lights) {
-	$scope.lights = lights;
+  $scope.lights = lights;
 
   // Switch light 1 on
   hue.setLightState(1, {"on", true}).then(function(response) {
