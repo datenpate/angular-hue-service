@@ -14,12 +14,17 @@ angular.module("hue", []).service("hue", [
       if (isReady) {
         deferred.resolve();
       } else {
-        getBridgeNupnp().then(function(data) {
-          config.bridgeIP = data[0].internalipaddress;
-          config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
+        if (config.apiUrl === "") {
+          getBridgeNupnp().then(function(data) {
+            config.bridgeIP = data[0].internalipaddress;
+            config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
+            isReady = true;
+            return deferred.resolve();
+          });
+        } else {
           isReady = true;
-          return deferred.resolve();
-        });
+          deferred.resolve();
+        }
       }
       return deferred.promise;
     };

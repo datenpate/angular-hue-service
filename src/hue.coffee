@@ -15,9 +15,13 @@ angular.module("hue", []).service "hue", [
       if isReady
         deferred.resolve()
       else
-        getBridgeNupnp().then (data) ->
-          config.bridgeIP = data[0].internalipaddress
-          config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
+        if config.apiUrl == ""
+          getBridgeNupnp().then (data) ->
+            config.bridgeIP = data[0].internalipaddress
+            config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
+            isReady = true
+            deferred.resolve()
+        else
           isReady = true
           deferred.resolve()
       deferred.promise
@@ -79,7 +83,6 @@ angular.module("hue", []).service "hue", [
 
     @setup = (newconfig={}) ->
       angular.extend config newconfig
-
 
 
     # http://www.developers.meethue.com/documentation/lights-api#11_get_all_lights
