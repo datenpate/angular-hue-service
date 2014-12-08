@@ -105,7 +105,7 @@ angular.module("hue", []).service("hue", [
       if (newconfig == null) {
         newconfig = {};
       }
-      return angular.extend(config(newconfig));
+      return angular.extend(config, newconfig);
     };
     this.getLights = function() {
       return _setup().then(function() {

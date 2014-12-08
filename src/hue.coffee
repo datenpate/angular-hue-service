@@ -82,7 +82,7 @@ angular.module("hue", []).service "hue", [
         config.bridgeIP
 
     @setup = (newconfig={}) ->
-      angular.extend config newconfig
+      angular.extend config, newconfig
 
 
     # http://www.developers.meethue.com/documentation/lights-api#11_get_all_lights
