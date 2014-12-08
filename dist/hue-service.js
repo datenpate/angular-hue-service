@@ -1,11 +1,13 @@
 angular.module("hue", []).service("hue", [
   "$http", "$q", function($http, $q) {
-    var apiUrl, bridgeIP, debug, getBridgeNupnp, isReady, username, _del, _get, _post, _put, _responseHandler, _setup;
-    username = "newdeveloper";
-    apiUrl = "";
-    bridgeIP = "";
+    var config, getBridgeNupnp, isReady, _del, _get, _post, _put, _responseHandler, _setup;
+    config = {
+      username: "newdeveloper",
+      debug: true,
+      apiUrl: "",
+      bridgeIP: ""
+    };
     isReady = false;
-    debug = true;
     _setup = function() {
       var deferred;
       deferred = $q.defer();
@@ -13,8 +15,8 @@ angular.module("hue", []).service("hue", [
         deferred.resolve();
       } else {
         getBridgeNupnp().then(function(data) {
-          bridgeIP = data[0].internalipaddress;
-          apiUrl = "http://" + bridgeIP + "/api/" + username;
+          config.bridgeIP = data[0].internalipaddress;
+          config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
           isReady = true;
           return deferred.resolve();
         });
@@ -27,7 +29,7 @@ angular.module("hue", []).service("hue", [
       $http.put(url, data).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (debug) {
+        if (config.debug) {
           console.log("Error: " + name, response);
         }
         return deferred.reject;
@@ -40,7 +42,7 @@ angular.module("hue", []).service("hue", [
       $http.post(url, data).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (debug) {
+        if (config.debug) {
           console.log("Error: " + name, response);
         }
         return deferred.reject;
@@ -53,7 +55,7 @@ angular.module("hue", []).service("hue", [
       $http["delete"](url).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (debug) {
+        if (config.debug) {
           console.log("Error: " + name, response);
         }
         return deferred.reject;
@@ -66,7 +68,7 @@ angular.module("hue", []).service("hue", [
       $http.get(url).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (debug) {
+        if (config.debug) {
           console.log("Error: " + name, response);
         }
         return deferred.reject;
@@ -75,12 +77,12 @@ angular.module("hue", []).service("hue", [
     };
     _responseHandler = function(name, response, deferred) {
       if ((response[0] != null) && response[0].error) {
-        if (debug) {
+        if (config.debug) {
           console.log("Error: " + name, response);
         }
         return deferred.reject;
       } else {
-        if (debug) {
+        if (config.debug) {
           console.log("Debug: " + name, response);
         }
         return deferred.resolve(response);
@@ -91,27 +93,33 @@ angular.module("hue", []).service("hue", [
     };
     this.getBridgeIP = function() {
       return _setup().then(function() {
-        return bridgeIP;
+        return config.bridgeIP;
       });
+    };
+    this.setup = function(newconfig) {
+      if (newconfig == null) {
+        newconfig = {};
+      }
+      return angular.extend(config(newconfig));
     };
     this.getLights = function() {
       return _setup().then(function() {
-        return _get("getLights", "" + apiUrl + "/lights");
+        return _get("getLights", "" + config.apiUrl + "/lights");
       });
     };
     this.getNewLights = function() {
       return _setup().then(function() {
-        return _get("getNewLights", "" + apiUrl + "/lights/new");
+        return _get("getNewLights", "" + config.apiUrl + "/lights/new");
       });
     };
     this.searchNewLights = function() {
       return _setup().then(function() {
-        return _post("searchNewLights", "" + apiUrl + "/lights", {});
+        return _post("searchNewLights", "" + config.apiUrl + "/lights", {});
       });
     };
     this.getLight = function(id) {
       return _setup().then(function() {
-        return _get("getLight", "" + apiUrl + "/lights/" + id);
+        return _get("getLight", "" + config.apiUrl + "/lights/" + id);
       });
     };
     this.setLightName = function(id, name) {
@@ -120,22 +128,22 @@ angular.module("hue", []).service("hue", [
         body = {
           "name": name
         };
-        return _put("setLightName", "" + apiUrl + "/lights/" + id, body);
+        return _put("setLightName", "" + config.apiUrl + "/lights/" + id, body);
       });
     };
     this.setLightState = function(id, state) {
       return _setup().then(function() {
-        return _put("setLightState", "" + apiUrl + "/lights/" + id + "/state", state);
+        return _put("setLightState", "" + config.apiUrl + "/lights/" + id + "/state", state);
       });
     };
     this.getConfiguration = function() {
       return _setup().then(function() {
-        return _get("getConfiguration", "" + apiUrl + "/config");
+        return _get("getConfiguration", "" + config.apiUrl + "/config");
       });
     };
     this.setConfiguration = function(configuration) {
       return _setup().then(function() {
-        return _put("setConfiguration", "" + apiUrl + "/config", configuration);
+        return _put("setConfiguration", "" + config.apiUrl + "/config", configuration);
       });
     };
     this.createUser = function(devicetype, username) {
@@ -150,22 +158,22 @@ angular.module("hue", []).service("hue", [
         if (username) {
           user.username = username;
         }
-        return _post("createUser", "http://" + bridgeIP + "/api", user);
+        return _post("createUser", "http://" + config.bridgeIP + "/api", user);
       });
     };
     this.deleteUser = function(username) {
       return _setup().then(function() {
-        return _del("deleteUser", "" + apiUrl + "/config/whitelist/" + username);
+        return _del("deleteUser", "" + config.apiUrl + "/config/whitelist/" + username);
       });
     };
     this.getFullState = function() {
       return _setup().then(function() {
-        return _get("getFullState", apiUrl);
+        return _get("getFullState", config.apiUrl);
       });
     };
     this.getGroups = function() {
       return _setup().then(function() {
-        return _get("getGroups", "" + apiUrl + "/groups");
+        return _get("getGroups", "" + config.apiUrl + "/groups");
       });
     };
     this.createGroup = function(name, lights) {
@@ -175,15 +183,15 @@ angular.module("hue", []).service("hue", [
           "lights": lights,
           "name": name
         };
-        if (debug) {
+        if (config.debug) {
           console.log("Debug: createGroup body", body);
         }
-        return _post("createGroup", "" + apiUrl + "/groups", body);
+        return _post("createGroup", "" + config.apiUrl + "/groups", body);
       });
     };
     this.getGroupAttributes = function(id) {
       return _setup().then(function() {
-        return _get("getGroupAttributes", "" + apiUrl + "/groups/" + id);
+        return _get("getGroupAttributes", "" + config.apiUrl + "/groups/" + id);
       });
     };
     this.setGroupAttributes = function(id, name, lights) {
@@ -193,27 +201,27 @@ angular.module("hue", []).service("hue", [
           "lights": lights,
           "name": name
         };
-        return _put("setGroupAttributes", "" + apiUrl + "/groups/" + id, body);
+        return _put("setGroupAttributes", "" + config.apiUrl + "/groups/" + id, body);
       });
     };
     this.setGroupState = function(id, state) {
       return _setup().then(function() {
-        return _put("setGroupState", "" + apiUrl + "/groups/" + id + "/action", state);
+        return _put("setGroupState", "" + config.apiUrl + "/groups/" + id + "/action", state);
       });
     };
     this.deleteGroup = function(id) {
       return _setup().then(function() {
-        return _del("deleteUser", "" + apiUrl + "/groups/" + id);
+        return _del("deleteUser", "" + config.apiUrl + "/groups/" + id);
       });
     };
     this.getRules = function() {
       return _setup().then(function() {
-        return _get("getRules", "" + apiUrl + "/rules");
+        return _get("getRules", "" + config.apiUrl + "/rules");
       });
     };
     this.getRule = function(id) {
       return _setup().then(function() {
-        return _get("getRule", "" + apiUrl + "/rules/" + id);
+        return _get("getRule", "" + config.apiUrl + "/rules/" + id);
       });
     };
     this.createRule = function(name, conditions, actions) {
@@ -224,7 +232,7 @@ angular.module("hue", []).service("hue", [
           "conditions": conditions,
           "actions": actions
         };
-        return _post("createRule", "" + apiUrl + "/rules", body);
+        return _post("createRule", "" + config.apiUrl + "/rules", body);
       });
     };
     this.updateRule = function(id, name, conditions, actions) {
@@ -249,20 +257,20 @@ angular.module("hue", []).service("hue", [
         if (actions) {
           body.actions = actions;
         }
-        if (debug) {
+        if (config.debug) {
           console.log("Debug: updateRule body", body);
         }
-        return _put("updateRule", "" + apiUrl + "/rules", body);
+        return _put("updateRule", "" + config.apiUrl + "/rules", body);
       });
     };
     this.deleteRule = function(id) {
       return _setup().then(function() {
-        return _del("deleteRule", "" + apiUrl + "/rules/" + id);
+        return _del("deleteRule", "" + config.apiUrl + "/rules/" + id);
       });
     };
     this.getSchedules = function() {
       return _setup().then(function() {
-        return _get("getSchedules", "" + apiUrl + "/schedules");
+        return _get("getSchedules", "" + config.apiUrl + "/schedules");
       });
     };
     this.createSchedule = function(name, description, command, time, status, autodelete) {
@@ -288,12 +296,12 @@ angular.module("hue", []).service("hue", [
           "status": status,
           "autodelete": autodelete
         };
-        return _post("createSchedule", "" + apiUrl + "/schedules", body);
+        return _post("createSchedule", "" + config.apiUrl + "/schedules", body);
       });
     };
     this.getScheduleAttributes = function(id) {
       return _setup().then(function() {
-        return _get("getScheduleAttributes", "" + apiUrl + "/schedules/" + id);
+        return _get("getScheduleAttributes", "" + config.apiUrl + "/schedules/" + id);
       });
     };
     this.setScheduleAttributes = function(id, name, description, command, time, status, autodelete) {
@@ -333,17 +341,17 @@ angular.module("hue", []).service("hue", [
         if (autodelete !== null) {
           body.autodelete = autodelete;
         }
-        return _put("setScheduleAttributes", "" + apiUrl + "/schedules/" + id, body);
+        return _put("setScheduleAttributes", "" + config.apiUrl + "/schedules/" + id, body);
       });
     };
     this.deleteSchedule = function(id) {
       return _setup().then(function() {
-        return _del("deleteSchedule", "" + apiUrl + "/schedules/" + id);
+        return _del("deleteSchedule", "" + config.apiUrl + "/schedules/" + id);
       });
     };
     this.getScenes = function() {
       return _setup().then(function() {
-        return _get("getScenes", "" + apiUrl + "/scenes");
+        return _get("getScenes", "" + config.apiUrl + "/scenes");
       });
     };
     this.createScene = function(id, name, lights) {
@@ -353,17 +361,17 @@ angular.module("hue", []).service("hue", [
           "name": name,
           "lights": lights
         };
-        return _put("createScene", "" + apiUrl + "/scenes/" + id, body);
+        return _put("createScene", "" + config.apiUrl + "/scenes/" + id, body);
       });
     };
     this.updateScene = function(id, light, state) {
       return _setup().then(function() {
-        return _put("updateScene", "" + apiUrl + "/scenes/" + id + "/lights/" + light + "/state", state);
+        return _put("updateScene", "" + config.apiUrl + "/scenes/" + id + "/lights/" + light + "/state", state);
       });
     };
     this.getSensors = function() {
       return _setup().then(function() {
-        return _get("getSensors", "" + apiUrl + "/sensors");
+        return _get("getSensors", "" + config.apiUrl + "/sensors");
       });
     };
     this.createSensor = function(name, modelid, swversion, type, uniqueid, manufacturername, state, config) {
@@ -389,22 +397,22 @@ angular.module("hue", []).service("hue", [
         if (config) {
           body.config = config;
         }
-        return _post("createSensor", "" + apiUrl + "/sensors", body);
+        return _post("createSensor", "" + config.apiUrl + "/sensors", body);
       });
     };
     this.searchNewSensors = function() {
       return _setup().then(function() {
-        return _post("searchNewSensors", "" + apiUrl + "/sensors", null);
+        return _post("searchNewSensors", "" + config.apiUrl + "/sensors", null);
       });
     };
     this.getNewSensors = function() {
       return _setup().then(function() {
-        return _get("getNewSensors", "" + apiUrl + "/sensors/new");
+        return _get("getNewSensors", "" + config.apiUrl + "/sensors/new");
       });
     };
     this.getSensor = function(id) {
       return _setup().then(function() {
-        return _get("getSensor", "" + apiUrl + "/sensors/" + id);
+        return _get("getSensor", "" + config.apiUrl + "/sensors/" + id);
       });
     };
     this.renameSensor = function(id, name) {
@@ -413,22 +421,22 @@ angular.module("hue", []).service("hue", [
         body = {
           "name": name
         };
-        return _put("renameSensor", "" + apiUrl + "/sensors/" + id, body);
+        return _put("renameSensor", "" + config.apiUrl + "/sensors/" + id, body);
       });
     };
     this.updateSensor = function(id, config) {
       return _setup().then(function() {
-        return _put("updateSensor", "" + apiUrl + "/sensors/" + id + "/config", config);
+        return _put("updateSensor", "" + config.apiUrl + "/sensors/" + id + "/config", config);
       });
     };
     this.setSensorState = function(id, state) {
       return _setup().then(function() {
-        return _put("setSensorState", "" + apiUrl + "/sensors/" + id + "/state", state);
+        return _put("setSensorState", "" + config.apiUrl + "/sensors/" + id + "/state", state);
       });
     };
     this.getTimezones = function() {
       return _setup().then(function() {
-        return _get("getTimezones", "" + apiUrl + "/info/timezones");
+        return _get("getTimezones", "" + config.apiUrl + "/info/timezones");
       });
     };
   }
