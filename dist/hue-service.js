@@ -2,8 +2,8 @@ angular.module("hue", []).service("hue", [
   "$http", "$q", function($http, $q) {
     var config, getBridgeNupnp, isReady, _del, _get, _post, _put, _responseHandler, _setup;
     config = {
-      username: "newdeveloper",
-      debug: true,
+      username: "",
+      debug: false,
       apiUrl: "",
       bridgeIP: ""
     };

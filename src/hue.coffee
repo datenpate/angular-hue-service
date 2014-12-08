@@ -3,8 +3,8 @@ angular.module("hue", []).service "hue", [
   "$q"
   ($http, $q) ->
     config = {
-      username: "newdeveloper"
-      debug: true
+      username: ""
+      debug: false
       apiUrl: ""
       bridgeIP: ""
     }
