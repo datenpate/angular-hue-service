@@ -1,0 +1,10 @@
+{
+  "name": "angular-hue-service-example",
+  "version": "1.0.0",
+  "devDependencies": {
+    "angular": "",
+    "bootstrap": "~3.1",
+    "angular-bootstrap": "~0.10.0",
+    "angular-bootstrap-slider": "~0.0.8"
+  }
+}

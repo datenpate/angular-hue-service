@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html ng-app="HueExample" ng-controller="MainController">
+  <head>
+    <title>Hue Example</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- font awesome from BootstrapCDN -->
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.css" />
+
+    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="node_modules/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="bower_components/seiyria-bootstrap-slider/js/bootstrap-slider.js"></script>
+    <script type="text/javascript" src="bower_components/angular-bootstrap-slider/slider.js"></script>
+    <script type="text/javascript" src="../dist/hue-service.js"></script>
+    <script type="text/javascript" src="app/app.js"></script>
+  </head>
+  <body>
+
+    <div class="container">
+
+      <div class="row">
+
+        <section class="lights col-xs-12">
+          <h2><i class="fa fa-lightbulb-o"></i> Lights</h2>
+
+          <div class="panel panel-default" ng-repeat="(key, light) in lights" ng-class="{disabled:!light.state.reachable}">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <i class="fa fa-lightbulb-o"></i> {{light.name}} ({{key}})
+                <i class="fa fa-warning pull-right" ng-if="!light.state.reachable"></i>
+              </h3>
+            </div>
+            <div class="panel-body">
+              <div class="btn-group btn-toggle">
+                <button class="btn btn-sm" ng-click="setLightStateOn(key, true)" ng-class="{active:light.state.on, 'btn-default':!light.state.on, 'btn-primary':light.state.on}">ON</button>
+                <button class="btn btn-sm" ng-click="setLightStateOn(key, false)" ng-class="{active:!light.state.on, 'btn-default':light.state.on, 'btn-primary':!light.state.on}">OFF</button>
+              </div>
+            </div>
+
+            <ul class="list-group">
+              <li class="list-group-item">
+                <h4>
+                  Brightness
+                </h4>
+                <p>
+                  <slider ng-model="light.state.bri" min="0" max="255" step="1" value="{{light.state.bri}}" ng-change="changeBrightness(key, light.state.bri)"></slider>
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4>
+                  Alert
+                </h4>
+                <p>
+                  <button class="btn btn-sm btn-default" ng-click="triggerAlert(key, 'none')">none</button>
+                  <button class="btn btn-sm btn-default" ng-click="triggerAlert(key, 'select')">select</button>
+                  <button class="btn btn-sm btn-default" ng-click="triggerAlert(key, 'lselect')">lselect</button>
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4>
+                  Effect
+                </h4>
+                <p>
+                <div class="btn-group btn-toggle">
+                  <button class="btn btn-sm" ng-click="setEffect(key, 'none')" ng-class="{'active btn-primary':light.state.effect=='none', 'btn-default':light.state.effect!='none'}">None</button>
+
+                  <button class="btn btn-sm" ng-click="setEffect(key, 'colorloop')" ng-class="{'active btn-primary':light.state.effect=='colorloop', 'btn-default':light.state.effect!='colorloop'}">Colorloop</button>
+                </div>
+                </p>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="groups col-xs-12">
+          <h2><i class="fa fa-folder-open-o"></i> Groups</h2>
+
+          <div class="panel panel-default" ng-repeat="(key, group) in groups">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <i class="fa fa-folder-open-o"></i> {{group.name}}
+                <button type="button" class="btn btn-default btn-xs pull-right" ng-click="deleteGroup(key)">
+                  <i class="fa fa-times"></i>
+                </button>
+              </h3>
+            </div>
+            <div class="panel-body">
+
+
+              <div class="btn-group btn-toggle">
+                <button class="btn btn-sm" ng-click="setGroupStateOn(key, true)" ng-class="{active:group.action.on, 'btn-default':!group.action.on, 'btn-primary':group.action.on}">ON</button>
+                <button class="btn btn-sm" ng-click="setGroupStateOn(key, false)" ng-class="{active:!group.action.on, 'btn-default':group.action.on, 'btn-primary':!group.action.on}">OFF</button>
+              </div>
+            </div>
+
+            <ul class="list-group">
+              <li class="list-group-item" ng-repeat="(key, light) in group.lights">
+                <i class="fa fa-lightbulb-o"></i> {{lights[light].name}}
+              </li>
+            </ul>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+
+  </body>
+</html>
