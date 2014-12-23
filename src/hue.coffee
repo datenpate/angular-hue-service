@@ -2,7 +2,8 @@
 angular.module("hue", []).service "hue", [
   "$http"
   "$q"
-  ($http, $q) ->
+  "$log"
+  ($http, $q, $log) ->
     config = {
       username: ""
       debug: false
@@ -17,12 +18,18 @@ angular.module("hue", []).service "hue", [
         deferred.resolve()
       else
         if config.apiUrl == ""
-          # TODO: handle error
           getBridgeNupnp().then (data) ->
-            config.bridgeIP = data[0].internalipaddress
-            config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
-            isReady = true
-            deferred.resolve()
+            if data[0]?
+              config.bridgeIP = data[0].internalipaddress
+              config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
+              isReady = true
+              deferred.resolve()
+            else
+              $log.error "Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?" if config.debug
+              deferred.reject
+          , (error) ->
+            $log.error "Error in setup: #{error}" if config.debug
+            deferred.reject
         else
           isReady = true
           deferred.resolve()
@@ -76,6 +83,12 @@ angular.module("hue", []).service "hue", [
         console.log "Debug: #{name}", response if config.debug
         deferred.resolve response
 
+    _buildUrl = (urlParts=[]) ->
+      url = config.apiUrl
+      for part in urlParts
+        url = url + "/#{part}"
+      return url
+
     getBridgeNupnp = ->
       _get "getBridgeNupnp", "https://www.meethue.com/api/nupnp"
     
@@ -90,31 +103,32 @@ angular.module("hue", []).service "hue", [
     # http://www.developers.meethue.com/documentation/lights-api#11_get_all_lights
     @getLights = ->
       _setup().then ->
-        _get "getLights", "#{config.apiUrl}/lights"
+        _get "getLights", _buildUrl(['lights'])
 
     # http://www.developers.meethue.com/documentation/lights-api#12_get_new_lights
     @getNewLights = ->
       _setup().then ->
-        _get "getNewLights", "#{config.apiUrl}/lights/new"
+        _get "getNewLights", _buildUrl(['lights', 'new'])
 
     # http://www.developers.meethue.com/documentation/lights-api#13_search_for_new_lights
     @searchNewLights = ->
       _setup().then ->
-        _post "searchNewLights", "#{config.apiUrl}/lights", {}
+        _post "searchNewLights", _buildUrl(['lights']), {}
 
     # http://www.developers.meethue.com/documentation/lights-api#14_get_light_attributes_and_state
     @getLight = (id) ->
       _setup().then ->
-        _get "getLight", "#{config.apiUrl}/lights/#{id}"
+        _get "getLight", _buildUrl(['lights', id])
 
     # http://www.developers.meethue.com/documentation/lights-api#15_set_light_attributes_rename
     @setLightName = (id, name) ->
       _setup().then ->
         body = {"name": name}
-        _put "setLightName", "#{config.apiUrl}/lights/#{id}", body
+        _put "setLightName", _buildUrl(['lights', id]), body
 
     # http://www.developers.meethue.com/documentation/lights-api#16_set_light_state
     @setLightState = (id, state) ->
+      # TODO: build a model for state
       _setup().then ->
         _put "setLightState", "#{config.apiUrl}/lights/#{id}/state", state
 
@@ -126,6 +140,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/configuration-api#73_modify_configuration
     @setConfiguration = (configuration) ->
+      # TODO: build a model for configuration
       _setup().then ->
         _put "setConfiguration", "#{config.apiUrl}/config", configuration
 
@@ -154,6 +169,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/groups-api#22_create_group
     @createGroup = (name, lights) ->
+      # TODO: build a model for lights
       _setup().then ->
         body = {
           "lights": lights
@@ -169,6 +185,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/groups-api#24_set_group_attributes
     @setGroupAttributes = (id, name, lights) ->
+      # TODO: build a model for lights
       _setup().then ->
         body = {
           "lights": lights
@@ -178,6 +195,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/groups-api#25_set_group_state
     @setGroupState = (id, state) ->
+      # TODO: build a model for state
       _setup().then ->
         _put "setGroupState", "#{config.apiUrl}/groups/#{id}/action", state
 
@@ -200,6 +218,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/rules-api#63_create_rule
     @createRule = (name, conditions, actions) ->
+      # TODO: build a model for conditions and actions
       _setup().then ->
         body = {
           "name": name
@@ -272,6 +291,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/scenes-api#42_create_scene
     @createScene = (id, name, lights) ->
+      # TODO: build a model for lights
       _setup().then ->
         body = {
           "name": name
@@ -281,6 +301,7 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/scenes-api#43_modify_scene
     @updateScene = (id, light, state) ->
+      # TODO: build a model for state
       _setup().then ->
         _put "updateScene", "#{config.apiUrl}/scenes/#{id}/lights/#{light}/state", state
 
@@ -330,10 +351,12 @@ angular.module("hue", []).service "hue", [
 
     # http://www.developers.meethue.com/documentation/sensors-api#58_change_sensor_config
     @updateSensor = (id, config) ->
+      # TODO: build a model for config
       _setup().then ->
         _put "updateSensor", "#{config.apiUrl}/sensors/#{id}/config", config
 
     @setSensorState = (id, state) ->
+      # TODO: build a model for state
       _setup().then ->
         _put "setSensorState", "#{config.apiUrl}/sensors/#{id}/state", state
 
