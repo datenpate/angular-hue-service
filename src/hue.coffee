@@ -24,7 +24,7 @@ angular.module("hue", []).service "hue", [
               isReady = true
               deferred.resolve()
             else
-              $log.error "Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?"
+              $log.error "Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?"
               deferred.reject
           , (error) ->
             $log.error "Error in setup: #{error}"
@@ -88,6 +88,21 @@ angular.module("hue", []).service "hue", [
         url = url + "/#{part}"
       return url
 
+    _apiCall = (method, path=[], params=null) ->
+      name = method + path.join("/")
+      url = _buildUrl(path)
+      switch method
+        when "get"
+          _get name, url
+        when "post"
+          _post name, url, params
+        when "put"
+          _put name, url, params
+        when "delete"
+          _del name, url
+        else
+          $log.error "unsupported method #{method}"
+
     getBridgeNupnp = ->
       _get "getBridgeNupnp", "https://www.meethue.com/api/nupnp"
     
@@ -102,69 +117,68 @@ angular.module("hue", []).service "hue", [
     # http://www.developers.meethue.com/documentation/lights-api#11_get_all_lights
     @getLights = ->
       _setup().then ->
-        _get "getLights", _buildUrl(['lights'])
+        _apiCall "get", ['lights']
 
     # http://www.developers.meethue.com/documentation/lights-api#12_get_new_lights
     @getNewLights = ->
       _setup().then ->
-        _get "getNewLights", _buildUrl(['lights', 'new'])
+        _apiCall "get", ['lights', 'new']
 
     # http://www.developers.meethue.com/documentation/lights-api#13_search_for_new_lights
     @searchNewLights = ->
       _setup().then ->
-        _post "searchNewLights", _buildUrl(['lights']), {}
+        _apiCall "post", ['lights'], {}
 
     # http://www.developers.meethue.com/documentation/lights-api#14_get_light_attributes_and_state
     @getLight = (id) ->
       _setup().then ->
-        _get "getLight", _buildUrl(['lights', id])
+        _apiCall "get", ['lights', id]
+
 
     # http://www.developers.meethue.com/documentation/lights-api#15_set_light_attributes_rename
     @setLightName = (id, name) ->
       _setup().then ->
-        body = {"name": name}
-        _put "setLightName", _buildUrl(['lights', id]), body
+        _apiCall "put", ['lights', id], {"name": name}
 
     # http://www.developers.meethue.com/documentation/lights-api#16_set_light_state
     @setLightState = (id, state) ->
       # TODO: build a model for state
       _setup().then ->
-        _put "setLightState", "#{config.apiUrl}/lights/#{id}/state", state
-
+        _apiCall "put", ["lights", id, "state"], state
 
     # http://www.developers.meethue.com/documentation/configuration-api#72_get_configuration
     @getConfiguration = ->
       _setup().then ->
-        _get "getConfiguration", "#{config.apiUrl}/config"
+        _apiCall "get", ["config"]
 
     # http://www.developers.meethue.com/documentation/configuration-api#73_modify_configuration
     @setConfiguration = (configuration) ->
       # TODO: build a model for configuration
       _setup().then ->
-        _put "setConfiguration", "#{config.apiUrl}/config", configuration
+        _apiCall "put", ["config"], configuration
 
     # http://www.developers.meethue.com/documentation/configuration-api#71_create_user
     @createUser = (devicetype, username=false) ->
       _setup().then ->
         user = {"devicetype": devicetype}
         user.username = username if username
-        _post "createUser", "http://#{config.bridgeIP}/api", user
+        _apiCall "post", ["api"], user
 
     # http://www.developers.meethue.com/documentation/configuration-api#74_delete_user_from_whitelist
     @deleteUser = (username) ->
       _setup().then ->
-        _del "deleteUser", "#{config.apiUrl}/config/whitelist/#{username}"
+        _apiCall "delete", ["config", "whitelist", username]
 
     # http://www.developers.meethue.com/documentation/configuration-api#75_get_full_state_datastore
     @getFullState = ->
       _setup().then ->
-        _get "getFullState", config.apiUrl
+        _apiCall "get"
 
 
     # http://www.developers.meethue.com/documentation/groups-api#21_get_all_groups
     @getGroups = ->
       _setup().then ->
-        _get "getGroups", "#{config.apiUrl}/groups"
+        _apiCall "get", ["groups"]
 
     # http://www.developers.meethue.com/documentation/groups-api#22_create_group
     @createGroup = (name, lights) ->
@@ -175,12 +189,12 @@ angular.module("hue", []).service "hue", [
           "name": name
         }
         $log.debug "Debug: createGroup body", body
-        _post "createGroup", "#{config.apiUrl}/groups", body
+        _apiCall "post", ["groups"], body
 
     # http://www.developers.meethue.com/documentation/groups-api#23_get_group_attributes
     @getGroupAttributes = (id) ->
       _setup().then ->
-        _get "getGroupAttributes", "#{config.apiUrl}/groups/#{id}"
+        _apiCall "get", ["groups", id]
 
     # http://www.developers.meethue.com/documentation/groups-api#24_set_group_attributes
     @setGroupAttributes = (id, name, lights) ->
@@ -190,30 +204,30 @@ angular.module("hue", []).service "hue", [
           "lights": lights
           "name": name
         }
-        _put "setGroupAttributes", "#{config.apiUrl}/groups/#{id}", body
+        _apiCall "put", ["groups", id], body
 
     # http://www.developers.meethue.com/documentation/groups-api#25_set_group_state
     @setGroupState = (id, state) ->
       # TODO: build a model for state
       _setup().then ->
-        _put "setGroupState", "#{config.apiUrl}/groups/#{id}/action", state
+        _apiCall "put", ["groups", id, "action"], state
 
     # http://www.developers.meethue.com/documentation/groups-api#26_delete_group
     @deleteGroup = (id) ->
       _setup().then ->
-        _del "deleteUser", "#{config.apiUrl}/groups/#{id}"
+        _apiCall "delete", ["groups", id]
 
 
     # rules-api
     # http://www.developers.meethue.com/documentation/rules-api#61_get_all_rules
     @getRules = ->
       _setup().then ->
-        _get "getRules", "#{config.apiUrl}/rules"
+        _apiCall "get", ["rules"]
 
     # http://www.developers.meethue.com/documentation/rules-api#62_get_rule
     @getRule = (id) ->
       _setup().then ->
-        _get "getRule", "#{config.apiUrl}/rules/#{id}"
+        _apiCall "get", ["rules", id]
 
     # http://www.developers.meethue.com/documentation/rules-api#63_create_rule
     @createRule = (name, conditions, actions) ->
@@ -224,7 +238,7 @@ angular.module("hue", []).service "hue", [
           "conditions": conditions
           "actions": actions
         }
-        _post "createRule", "#{config.apiUrl}/rules", body
+        _apiCall "post", ["rules"], body
 
     # http://www.developers.meethue.com/documentation/rules-api#64_update_rule
     @updateRule = (id, name=false, conditions=false, actions=false) ->
@@ -234,18 +248,18 @@ angular.module("hue", []).service "hue", [
         body.conditions = conditions if conditions
         body.actions = actions if actions
         $log.debug "Debug: updateRule body", body
-        _put "updateRule", "#{config.apiUrl}/rules", body
+        _apiCall "put", ["rules"], body
 
     # http://www.developers.meethue.com/documentation/rules-api#65_delete_rule
     @deleteRule = (id) ->
       _setup().then ->
-        _del "deleteRule", "#{config.apiUrl}/rules/#{id}"
+        _apiCall "delete", ["rules", id]
 
 
     # http://www.developers.meethue.com/documentation/schedules-api-0#31_get_all_schedules
     @getSchedules = ->
       _setup().then ->
-        _get "getSchedules", "#{config.apiUrl}/schedules"
+        _apiCall "get", ["schedules"]
 
     # http://www.developers.meethue.com/documentation/schedules-api-0#32_create_schedule
     # TODO: strip whitespace from command
@@ -259,12 +273,12 @@ angular.module("hue", []).service "hue", [
           "status": status
           "autodelete": autodelete
         }
-        _post "createSchedule", "#{config.apiUrl}/schedules", body
+        _apiCall "post", ["schedules"], body
 
     # http://www.developers.meethue.com/documentation/schedules-api-0#33_get_schedule_attributes
     @getScheduleAttributes = (id) ->
       _setup().then ->
-        _get "getScheduleAttributes", "#{config.apiUrl}/schedules/#{id}"
+        _apiCall "get", ["schedules", id]
 
     # http://www.developers.meethue.com/documentation/schedules-api-0#34_set_schedule_attributes
     @setScheduleAttributes = (id, name=null, description=null, command=null, time=null, status=null, autodelete=null) ->
@@ -275,18 +289,18 @@ angular.module("hue", []).service "hue", [
         body.command = command if command
         body.status = status if status
         body.autodelete = autodelete if autodelete != null
-        _put "setScheduleAttributes", "#{config.apiUrl}/schedules/#{id}", body
+        _apiCall "put", ["schedules", id], body
 
     # http://www.developers.meethue.com/documentation/schedules-api-0#35_delete_schedule
     @deleteSchedule = (id) ->
       _setup().then ->
-        _del "deleteSchedule", "#{config.apiUrl}/schedules/#{id}"
+        _apiCall "delete", ["schedules", id]
 
 
     # http://www.developers.meethue.com/documentation/scenes-api#41_get_all_scenes
     @getScenes = ->
       _setup().then ->
-        _get "getScenes", "#{config.apiUrl}/scenes"
+        _apiCall "get", ["scenes"]
 
     # http://www.developers.meethue.com/documentation/scenes-api#42_create_scene
     @createScene = (id, name, lights) ->
@@ -296,19 +310,19 @@ angular.module("hue", []).service "hue", [
           "name": name
           "lights": lights
         }
-        _put "createScene", "#{config.apiUrl}/scenes/#{id}", body
+        _apiCall "put", ["scenes", id], body
 
     # http://www.developers.meethue.com/documentation/scenes-api#43_modify_scene
     @updateScene = (id, light, state) ->
       # TODO: build a model for state
       _setup().then ->
-        _put "updateScene", "#{config.apiUrl}/scenes/#{id}/lights/#{light}/state", state
+        _apiCall "put", ["scenes", id, "lights", light, "state"], state
 
 
     # http://www.developers.meethue.com/documentation/sensors-api#51_get_all_sensors
     @getSensors = ->
       _setup().then ->
-        _get "getSensors", "#{config.apiUrl}/sensors"
+        _apiCall "get", ["sensors"]
 
     # http://www.developers.meethue.com/documentation/sensors-api#52_create_sensor
     @createSensor = (name, modelid, swversion, type, uniqueid, manufacturername, state=null, config=null) ->
@@ -323,22 +337,22 @@ angular.module("hue", []).service "hue", [
         }
         body.state = state if state
         body.config = config if config
-        _post "createSensor", "#{config.apiUrl}/sensors", body
+        _apiCall "post", ["sensors"], body
 
     # http://www.developers.meethue.com/documentation/sensors-api#53_autodiscover_sensors
     @searchNewSensors = ->
       _setup().then ->
-        _post "searchNewSensors", "#{config.apiUrl}/sensors", null
+        _apiCall "post", ["sensors"], null
 
     # http://www.developers.meethue.com/documentation/sensors-api#54_getnew_sensors
     @getNewSensors = ->
       _setup().then ->
-        _get "getNewSensors", "#{config.apiUrl}/sensors/new"
+        _apiCall "get", ["sensors", "new"]
 
     # http://www.developers.meethue.com/documentation/sensors-api#55_get_sensor
     @getSensor = (id) ->
       _setup().then ->
-        _get "getSensor", "#{config.apiUrl}/sensors/#{id}"
+        _apiCall "get", ["sensors", id]
 
     # http://www.developers.meethue.com/documentation/sensors-api#56_update_sensor
     @renameSensor = (id, name) ->
@@ -346,23 +360,23 @@ angular.module("hue", []).service "hue", [
         body = {
           "name": name
         }
-        _put "renameSensor", "#{config.apiUrl}/sensors/#{id}", body
+        _apiCall "put", ["sensors", id], body
 
     # http://www.developers.meethue.com/documentation/sensors-api#58_change_sensor_config
     @updateSensor = (id, config) ->
       # TODO: build a model for config
       _setup().then ->
-        _put "updateSensor", "#{config.apiUrl}/sensors/#{id}/config", config
+        _apiCall "put", ["sensors", id, "config"], config
 
     @setSensorState = (id, state) ->
       # TODO: build a model for state
       _setup().then ->
-        _put "setSensorState", "#{config.apiUrl}/sensors/#{id}/state", state
+        _apiCall "put", ["sensors", id, "state"], state
 
     # http://www.developers.meethue.com/documentation/info-api#81_get_all_timezones
     @getTimezones = ->
       _setup().then ->
-        _get "getTimezones", "#{config.apiUrl}/info/timezones"
+        _apiCall "get", ["info", "timezones"]
 
     return
 ]

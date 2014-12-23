@@ -1,7 +1,7 @@
 "use strict";
 angular.module("hue", []).service("hue", [
   "$http", "$q", "$log", function($http, $q, $log) {
-    var config, getBridgeNupnp, isReady, _buildUrl, _del, _get, _post, _put, _responseHandler, _setup;
+    var config, getBridgeNupnp, isReady, _apiCall, _buildUrl, _del, _get, _post, _put, _responseHandler, _setup;
     config = {
       username: "",
       apiUrl: "",
@@ -22,7 +22,7 @@ angular.module("hue", []).service("hue", [
               isReady = true;
               return deferred.resolve();
             } else {
-              $log.error("Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?");
+              $log.error("Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?");
               return deferred.reject;
             }
           }, function(error) {
@@ -101,6 +101,29 @@ angular.module("hue", []).service("hue", [
       }
       return url;
     };
+    _apiCall = function(method, path, params) {
+      var name, url;
+      if (path == null) {
+        path = [];
+      }
+      if (params == null) {
+        params = null;
+      }
+      name = method + path.join("/");
+      url = _buildUrl(path);
+      switch (method) {
+        case "get":
+          return _get(name, url);
+        case "post":
+          return _post(name, url, params);
+        case "put":
+          return _put(name, url, params);
+        case "delete":
+          return _del(name, url);
+        default:
+          return $log.error("unsupported method " + method);
+      }
+    };
     getBridgeNupnp = function() {
       return _get("getBridgeNupnp", "https://www.meethue.com/api/nupnp");
     };
@@ -117,46 +140,44 @@ angular.module("hue", []).service("hue", [
     };
     this.getLights = function() {
       return _setup().then(function() {
-        return _get("getLights", _buildUrl(['lights']));
+        return _apiCall("get", ['lights']);
       });
     };
     this.getNewLights = function() {
       return _setup().then(function() {
-        return _get("getNewLights", _buildUrl(['lights', 'new']));
+        return _apiCall("get", ['lights', 'new']);
       });
     };
     this.searchNewLights = function() {
       return _setup().then(function() {
-        return _post("searchNewLights", _buildUrl(['lights']), {});
+        return _apiCall("post", ['lights'], {});
       });
     };
     this.getLight = function(id) {
       return _setup().then(function() {
-        return _get("getLight", _buildUrl(['lights', id]));
+        return _apiCall("get", ['lights', id]);
       });
     };
     this.setLightName = function(id, name) {
       return _setup().then(function() {
-        var body;
-        body = {
+        return _apiCall("put", ['lights', id], {
           "name": name
-        };
-        return _put("setLightName", _buildUrl(['lights', id]), body);
+        });
       });
     };
     this.setLightState = function(id, state) {
       return _setup().then(function() {
-        return _put("setLightState", "" + config.apiUrl + "/lights/" + id + "/state", state);
+        return _apiCall("put", ["lights", id, "state"], state);
       });
     };
     this.getConfiguration = function() {
       return _setup().then(function() {
-        return _get("getConfiguration", "" + config.apiUrl + "/config");
+        return _apiCall("get", ["config"]);
       });
     };
     this.setConfiguration = function(configuration) {
       return _setup().then(function() {
-        return _put("setConfiguration", "" + config.apiUrl + "/config", configuration);
+        return _apiCall("put", ["config"], configuration);
       });
     };
     this.createUser = function(devicetype, username) {
@@ -171,22 +192,22 @@ angular.module("hue", []).service("hue", [
         if (username) {
           user.username = username;
         }
-        return _post("createUser", "http://" + config.bridgeIP + "/api", user);
+        return _apiCall("post", ["api"], user);
       });
     };
     this.deleteUser = function(username) {
       return _setup().then(function() {
-        return _del("deleteUser", "" + config.apiUrl + "/config/whitelist/" + username);
+        return _apiCall("delete", ["config", "whitelist", username]);
       });
     };
     this.getFullState = function() {
       return _setup().then(function() {
-        return _get("getFullState", config.apiUrl);
+        return _apiCall("get");
       });
     };
     this.getGroups = function() {
       return _setup().then(function() {
-        return _get("getGroups", "" + config.apiUrl + "/groups");
+        return _apiCall("get", ["groups"]);
       });
     };
     this.createGroup = function(name, lights) {
@@ -197,12 +218,12 @@ angular.module("hue", []).service("hue", [
           "name": name
         };
         $log.debug("Debug: createGroup body", body);
-        return _post("createGroup", "" + config.apiUrl + "/groups", body);
+        return _apiCall("post", ["groups"], body);
       });
     };
     this.getGroupAttributes = function(id) {
       return _setup().then(function() {
-        return _get("getGroupAttributes", "" + config.apiUrl + "/groups/" + id);
+        return _apiCall("get", ["groups", id]);
       });
     };
     this.setGroupAttributes = function(id, name, lights) {
@@ -212,27 +233,27 @@ angular.module("hue", []).service("hue", [
           "lights": lights,
           "name": name
         };
-        return _put("setGroupAttributes", "" + config.apiUrl + "/groups/" + id, body);
+        return _apiCall("put", ["groups", id], body);
       });
     };
     this.setGroupState = function(id, state) {
       return _setup().then(function() {
-        return _put("setGroupState", "" + config.apiUrl + "/groups/" + id + "/action", state);
+        return _apiCall("put", ["groups", id, "action"], state);
       });
     };
     this.deleteGroup = function(id) {
       return _setup().then(function() {
-        return _del("deleteUser", "" + config.apiUrl + "/groups/" + id);
+        return _apiCall("delete", ["groups", id]);
       });
     };
     this.getRules = function() {
       return _setup().then(function() {
-        return _get("getRules", "" + config.apiUrl + "/rules");
+        return _apiCall("get", ["rules"]);
       });
     };
     this.getRule = function(id) {
       return _setup().then(function() {
-        return _get("getRule", "" + config.apiUrl + "/rules/" + id);
+        return _apiCall("get", ["rules", id]);
       });
     };
     this.createRule = function(name, conditions, actions) {
@@ -243,7 +264,7 @@ angular.module("hue", []).service("hue", [
           "conditions": conditions,
           "actions": actions
         };
-        return _post("createRule", "" + config.apiUrl + "/rules", body);
+        return _apiCall("post", ["rules"], body);
       });
     };
     this.updateRule = function(id, name, conditions, actions) {
@@ -269,17 +290,17 @@ angular.module("hue", []).service("hue", [
           body.actions = actions;
         }
         $log.debug("Debug: updateRule body", body);
-        return _put("updateRule", "" + config.apiUrl + "/rules", body);
+        return _apiCall("put", ["rules"], body);
       });
     };
     this.deleteRule = function(id) {
       return _setup().then(function() {
-        return _del("deleteRule", "" + config.apiUrl + "/rules/" + id);
+        return _apiCall("delete", ["rules", id]);
       });
     };
     this.getSchedules = function() {
       return _setup().then(function() {
-        return _get("getSchedules", "" + config.apiUrl + "/schedules");
+        return _apiCall("get", ["schedules"]);
       });
     };
     this.createSchedule = function(name, description, command, time, status, autodelete) {
@@ -305,12 +326,12 @@ angular.module("hue", []).service("hue", [
           "status": status,
           "autodelete": autodelete
         };
-        return _post("createSchedule", "" + config.apiUrl + "/schedules", body);
+        return _apiCall("post", ["schedules"], body);
       });
     };
     this.getScheduleAttributes = function(id) {
       return _setup().then(function() {
-        return _get("getScheduleAttributes", "" + config.apiUrl + "/schedules/" + id);
+        return _apiCall("get", ["schedules", id]);
       });
     };
     this.setScheduleAttributes = function(id, name, description, command, time, status, autodelete) {
@@ -350,17 +371,17 @@ angular.module("hue", []).service("hue", [
         if (autodelete !== null) {
           body.autodelete = autodelete;
         }
-        return _put("setScheduleAttributes", "" + config.apiUrl + "/schedules/" + id, body);
+        return _apiCall("put", ["schedules", id], body);
       });
     };
     this.deleteSchedule = function(id) {
       return _setup().then(function() {
-        return _del("deleteSchedule", "" + config.apiUrl + "/schedules/" + id);
+        return _apiCall("delete", ["schedules", id]);
       });
     };
     this.getScenes = function() {
       return _setup().then(function() {
-        return _get("getScenes", "" + config.apiUrl + "/scenes");
+        return _apiCall("get", ["scenes"]);
       });
     };
     this.createScene = function(id, name, lights) {
@@ -370,17 +391,17 @@ angular.module("hue", []).service("hue", [
           "name": name,
           "lights": lights
         };
-        return _put("createScene", "" + config.apiUrl + "/scenes/" + id, body);
+        return _apiCall("put", ["scenes", id], body);
       });
     };
     this.updateScene = function(id, light, state) {
       return _setup().then(function() {
-        return _put("updateScene", "" + config.apiUrl + "/scenes/" + id + "/lights/" + light + "/state", state);
+        return _apiCall("put", ["scenes", id, "lights", light, "state"], state);
       });
     };
     this.getSensors = function() {
       return _setup().then(function() {
-        return _get("getSensors", "" + config.apiUrl + "/sensors");
+        return _apiCall("get", ["sensors"]);
       });
     };
     this.createSensor = function(name, modelid, swversion, type, uniqueid, manufacturername, state, config) {
@@ -406,22 +427,22 @@ angular.module("hue", []).service("hue", [
         if (config) {
           body.config = config;
         }
-        return _post("createSensor", "" + config.apiUrl + "/sensors", body);
+        return _apiCall("post", ["sensors"], body);
       });
     };
     this.searchNewSensors = function() {
       return _setup().then(function() {
-        return _post("searchNewSensors", "" + config.apiUrl + "/sensors", null);
+        return _apiCall("post", ["sensors"], null);
       });
     };
     this.getNewSensors = function() {
       return _setup().then(function() {
-        return _get("getNewSensors", "" + config.apiUrl + "/sensors/new");
+        return _apiCall("get", ["sensors", "new"]);
       });
     };
     this.getSensor = function(id) {
       return _setup().then(function() {
-        return _get("getSensor", "" + config.apiUrl + "/sensors/" + id);
+        return _apiCall("get", ["sensors", id]);
       });
     };
     this.renameSensor = function(id, name) {
@@ -430,22 +451,22 @@ angular.module("hue", []).service("hue", [
         body = {
           "name": name
         };
-        return _put("renameSensor", "" + config.apiUrl + "/sensors/" + id, body);
+        return _apiCall("put", ["sensors", id], body);
       });
     };
     this.updateSensor = function(id, config) {
       return _setup().then(function() {
-        return _put("updateSensor", "" + config.apiUrl + "/sensors/" + id + "/config", config);
+        return _apiCall("put", ["sensors", id, "config"], config);
       });
     };
     this.setSensorState = function(id, state) {
       return _setup().then(function() {
-        return _put("setSensorState", "" + config.apiUrl + "/sensors/" + id + "/state", state);
+        return _apiCall("put", ["sensors", id, "state"], state);
       });
     };
     this.getTimezones = function() {
       return _setup().then(function() {
-        return _get("getTimezones", "" + config.apiUrl + "/info/timezones");
+        return _apiCall("get", ["info", "timezones"]);
       });
     };
   }
