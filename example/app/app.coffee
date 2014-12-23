@@ -1,3 +1,4 @@
+"use strict"
 angular.module "HueExample", ['hue']
 .controller 'MainController', ($scope, hue) ->
   myHue = hue

@@ -1,3 +1,4 @@
+"use strict"
 angular.module("hue", []).service "hue", [
   "$http"
   "$q"
@@ -16,6 +17,7 @@ angular.module("hue", []).service "hue", [
         deferred.resolve()
       else
         if config.apiUrl == ""
+          # TODO: handle error
           getBridgeNupnp().then (data) ->
             config.bridgeIP = data[0].internalipaddress
             config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
