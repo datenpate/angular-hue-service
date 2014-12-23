@@ -1,9 +1,9 @@
+"use strict";
 angular.module("hue", []).service("hue", [
-  "$http", "$q", function($http, $q) {
-    var config, getBridgeNupnp, isReady, _del, _get, _post, _put, _responseHandler, _setup;
+  "$http", "$q", "$log", function($http, $q, $log) {
+    var config, getBridgeNupnp, isReady, _buildUrl, _del, _get, _post, _put, _responseHandler, _setup;
     config = {
       username: "",
-      debug: false,
       apiUrl: "",
       bridgeIP: ""
     };
@@ -16,10 +16,18 @@ angular.module("hue", []).service("hue", [
       } else {
         if (config.apiUrl === "") {
           getBridgeNupnp().then(function(data) {
-            config.bridgeIP = data[0].internalipaddress;
-            config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
-            isReady = true;
-            return deferred.resolve();
+            if (data[0] != null) {
+              config.bridgeIP = data[0].internalipaddress;
+              config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
+              isReady = true;
+              return deferred.resolve();
+            } else {
+              $log.error("Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?");
+              return deferred.reject;
+            }
+          }, function(error) {
+            $log.error("Error in setup: " + error);
+            return deferred.reject;
           });
         } else {
           isReady = true;
@@ -34,9 +42,7 @@ angular.module("hue", []).service("hue", [
       $http.put(url, data).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (config.debug) {
-          console.log("Error: " + name, response);
-        }
+        $log.error("Error: " + name, response);
         return deferred.reject;
       });
       return deferred.promise;
@@ -47,9 +53,7 @@ angular.module("hue", []).service("hue", [
       $http.post(url, data).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (config.debug) {
-          console.log("Error: " + name, response);
-        }
+        $log.error("Error: " + name, response);
         return deferred.reject;
       });
       return deferred.promise;
@@ -60,9 +64,7 @@ angular.module("hue", []).service("hue", [
       $http["delete"](url).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (config.debug) {
-          console.log("Error: " + name, response);
-        }
+        $log.error("Error: " + name, response);
         return deferred.reject;
       });
       return deferred.promise;
@@ -73,25 +75,31 @@ angular.module("hue", []).service("hue", [
       $http.get(url).success(function(response) {
         return _responseHandler(name, response, deferred);
       }).error(function(response) {
-        if (config.debug) {
-          console.log("Error: " + name, response);
-        }
+        $log.error("" + name, response);
         return deferred.reject;
       });
       return deferred.promise;
     };
     _responseHandler = function(name, response, deferred) {
       if ((response[0] != null) && response[0].error) {
-        if (config.debug) {
-          console.log("Error: " + name, response);
-        }
+        $log.error("" + name, response);
         return deferred.reject;
       } else {
-        if (config.debug) {
-          console.log("Debug: " + name, response);
-        }
+        $log.debug("Response of " + name + ":", response);
         return deferred.resolve(response);
       }
+    };
+    _buildUrl = function(urlParts) {
+      var part, url, _i, _len;
+      if (urlParts == null) {
+        urlParts = [];
+      }
+      url = config.apiUrl;
+      for (_i = 0, _len = urlParts.length; _i < _len; _i++) {
+        part = urlParts[_i];
+        url = url + ("/" + part);
+      }
+      return url;
     };
     getBridgeNupnp = function() {
       return _get("getBridgeNupnp", "https://www.meethue.com/api/nupnp");
@@ -109,22 +117,22 @@ angular.module("hue", []).service("hue", [
     };
     this.getLights = function() {
       return _setup().then(function() {
-        return _get("getLights", "" + config.apiUrl + "/lights");
+        return _get("getLights", _buildUrl(['lights']));
       });
     };
     this.getNewLights = function() {
       return _setup().then(function() {
-        return _get("getNewLights", "" + config.apiUrl + "/lights/new");
+        return _get("getNewLights", _buildUrl(['lights', 'new']));
       });
     };
     this.searchNewLights = function() {
       return _setup().then(function() {
-        return _post("searchNewLights", "" + config.apiUrl + "/lights", {});
+        return _post("searchNewLights", _buildUrl(['lights']), {});
       });
     };
     this.getLight = function(id) {
       return _setup().then(function() {
-        return _get("getLight", "" + config.apiUrl + "/lights/" + id);
+        return _get("getLight", _buildUrl(['lights', id]));
       });
     };
     this.setLightName = function(id, name) {
@@ -133,7 +141,7 @@ angular.module("hue", []).service("hue", [
         body = {
           "name": name
         };
-        return _put("setLightName", "" + config.apiUrl + "/lights/" + id, body);
+        return _put("setLightName", _buildUrl(['lights', id]), body);
       });
     };
     this.setLightState = function(id, state) {
@@ -188,9 +196,7 @@ angular.module("hue", []).service("hue", [
           "lights": lights,
           "name": name
         };
-        if (config.debug) {
-          console.log("Debug: createGroup body", body);
-        }
+        $log.debug("Debug: createGroup body", body);
         return _post("createGroup", "" + config.apiUrl + "/groups", body);
       });
     };
@@ -262,9 +268,7 @@ angular.module("hue", []).service("hue", [
         if (actions) {
           body.actions = actions;
         }
-        if (config.debug) {
-          console.log("Debug: updateRule body", body);
-        }
+        $log.debug("Debug: updateRule body", body);
         return _put("updateRule", "" + config.apiUrl + "/rules", body);
       });
     };

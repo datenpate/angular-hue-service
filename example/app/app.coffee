@@ -1,10 +1,12 @@
 "use strict"
 angular.module "HueExample", ['hue']
+.config ['$logProvider', ($logProvider) ->
+  $logProvider.debugEnabled(true);
+]
 .controller 'MainController', ($scope, hue) ->
   myHue = hue
 
   myHue.setup
-    debug: true
     username: "newdeveloper"
 
   myHue.getLights().then (lights) ->

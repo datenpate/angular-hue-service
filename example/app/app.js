@@ -1,8 +1,12 @@
-angular.module("HueExample", ['hue']).controller('MainController', function($scope, hue) {
+"use strict";
+angular.module("HueExample", ['hue']).config([
+  '$logProvider', function($logProvider) {
+    return $logProvider.debugEnabled(true);
+  }
+]).controller('MainController', function($scope, hue) {
   var myHue;
   myHue = hue;
   myHue.setup({
-    debug: true,
     username: "newdeveloper"
   });
   return myHue.getLights().then(function(lights) {

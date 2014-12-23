@@ -6,7 +6,6 @@ angular.module("hue", []).service "hue", [
   ($http, $q, $log) ->
     config = {
       username: ""
-      debug: false
       apiUrl: ""
       bridgeIP: ""
     }
@@ -25,10 +24,10 @@ angular.module("hue", []).service "hue", [
               isReady = true
               deferred.resolve()
             else
-              $log.error "Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?" if config.debug
+              $log.error "Error in setup: Returned data from nupnp is empty. Is a hue bridge present in this network?"
               deferred.reject
           , (error) ->
-            $log.error "Error in setup: #{error}" if config.debug
+            $log.error "Error in setup: #{error}"
             deferred.reject
         else
           isReady = true
@@ -41,7 +40,7 @@ angular.module("hue", []).service "hue", [
         .success (response) ->
           _responseHandler name, response, deferred
         .error (response) ->
-          console.log "Error: #{name}", response if config.debug
+          $log.error "Error: #{name}", response
           deferred.reject
       deferred.promise
 
@@ -51,7 +50,7 @@ angular.module("hue", []).service "hue", [
         .success (response) ->
           _responseHandler name, response, deferred
         .error (response) ->
-          console.log "Error: #{name}", response if config.debug
+          $log.error "Error: #{name}", response
           deferred.reject
       deferred.promise
 
@@ -61,7 +60,7 @@ angular.module("hue", []).service "hue", [
         .success (response) ->
           _responseHandler name, response, deferred
         .error (response) ->
-          console.log "Error: #{name}", response if config.debug
+          $log.error "Error: #{name}", response
           deferred.reject
       deferred.promise
 
@@ -71,16 +70,16 @@ angular.module("hue", []).service "hue", [
         .success (response) ->
           _responseHandler name, response, deferred
         .error (response) ->
-          console.log "Error: #{name}", response if config.debug
+          $log.error "#{name}", response
           deferred.reject
       deferred.promise
 
     _responseHandler = (name, response, deferred) ->
       if response[0]? && response[0].error
-        console.log "Error: #{name}", response if config.debug
+        $log.error "#{name}", response
         deferred.reject
       else
-        console.log "Debug: #{name}", response if config.debug
+        $log.debug "Response of #{name}:", response
         deferred.resolve response
 
     _buildUrl = (urlParts=[]) ->
@@ -175,7 +174,7 @@ angular.module("hue", []).service "hue", [
           "lights": lights
           "name": name
         }
-        console.log "Debug: createGroup body", body if config.debug
+        $log.debug "Debug: createGroup body", body
         _post "createGroup", "#{config.apiUrl}/groups", body
 
     # http://www.developers.meethue.com/documentation/groups-api#23_get_group_attributes
@@ -234,7 +233,7 @@ angular.module("hue", []).service "hue", [
         body.name = name if name
         body.conditions = conditions if conditions
         body.actions = actions if actions
-        console.log "Debug: updateRule body", body if config.debug
+        $log.debug "Debug: updateRule body", body
         _put "updateRule", "#{config.apiUrl}/rules", body
 
     # http://www.developers.meethue.com/documentation/rules-api#65_delete_rule
