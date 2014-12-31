@@ -4,11 +4,11 @@ angular.module("hue", []).service "hue", [
   "$q"
   "$log"
   ($http, $q, $log) ->
-    config = {
+    config =
       username: ""
       apiUrl: ""
       bridgeIP: ""
-    }
+
     isReady = false
 
     _setup = ->
@@ -114,7 +114,10 @@ angular.module("hue", []).service "hue", [
       angular.extend config, newconfig
 
 
+    # Get all lights
     # http://www.developers.meethue.com/documentation/lights-api#11_get_all_lights
+    #
+    # @return [promise]
     @getLights = ->
       _setup().then ->
         _apiCall "get", ['lights']
@@ -129,7 +132,10 @@ angular.module("hue", []).service "hue", [
       _setup().then ->
         _apiCall "post", ['lights'], {}
 
+    # Get a light
     # http://www.developers.meethue.com/documentation/lights-api#14_get_light_attributes_and_state
+    #
+    # @param [Integer] id light id
     @getLight = (id) ->
       _setup().then ->
         _apiCall "get", ['lights', id]
@@ -377,6 +383,21 @@ angular.module("hue", []).service "hue", [
     @getTimezones = ->
       _setup().then ->
         _apiCall "get", ["info", "timezones"]
+
+
+    # Extras
+    # light states
+
+    # effect: "none"|"colorloop"
+    @setEffect = (id, effect="none") ->
+      setLightState id, {"effect": effect}
+
+    # alert: "none"|"select"|"lselect"
+    @setAlert = (id, alert="none") ->
+      setLightState id, {"alert": alert}
+
+    @setBrightness = (id, brightness) ->
+      setLightState id, {"bri": brightness}
 
     return
 ]
