@@ -26,3 +26,8 @@ Install Node.js and then
 npm install
 grunt build
 ```
+
+## Versioning
+http://semver.org/
+
+## License
