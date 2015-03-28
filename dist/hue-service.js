@@ -1,7 +1,7 @@
 "use strict";
 angular.module("hue", []).service("hue", [
   "$http", "$q", "$log", function($http, $q, $log) {
-    var config, getBridgeNupnp, isReady, _apiCall, _buildUrl, _del, _get, _post, _put, _responseHandler, _setup;
+    var buildApiUrl, config, getBridgeNupnp, isReady, _apiCall, _buildUrl, _del, _get, _post, _put, _responseHandler, _setup;
     config = {
       username: "",
       apiUrl: "",
@@ -13,26 +13,37 @@ angular.module("hue", []).service("hue", [
       deferred = $q.defer();
       if (isReady) {
         deferred.resolve();
+        return deferred.promise;
+      }
+      if (config.username === "") {
+        $log.error("Error in setup: Username has to be set");
+        deferred.reject;
+        return deferred.promise;
+      }
+      if (config.apiUrl !== "") {
+        isReady = true;
+        deferred.resolve();
+        return deferred.promise;
+      }
+      if (config.bridgeIP !== "") {
+        config.apiUrl = buildApiUrl();
+        isReady = true;
+        deferred.resolve();
       } else {
-        if (config.apiUrl === "") {
-          getBridgeNupnp().then(function(data) {
-            if (data[0] != null) {
-              config.bridgeIP = data[0].internalipaddress;
-              config.apiUrl = "http://" + config.bridgeIP + "/api/" + config.username;
-              isReady = true;
-              return deferred.resolve();
-            } else {
-              $log.error("Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?");
-              return deferred.reject;
-            }
-          }, function(error) {
-            $log.error("Error in setup: " + error);
+        getBridgeNupnp().then(function(data) {
+          if (data[0] != null) {
+            config.bridgeIP = data[0].internalipaddress;
+            config.apiUrl = buildApiUrl();
+            isReady = true;
+            return deferred.resolve();
+          } else {
+            $log.error("Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?");
             return deferred.reject;
-          });
-        } else {
-          isReady = true;
-          deferred.resolve();
-        }
+          }
+        }, function(error) {
+          $log.error("Error in setup: " + error);
+          return deferred.reject;
+        });
       }
       return deferred.promise;
     };
@@ -126,6 +137,9 @@ angular.module("hue", []).service("hue", [
     };
     getBridgeNupnp = function() {
       return _get("getBridgeNupnp", "https://www.meethue.com/api/nupnp");
+    };
+    buildApiUrl = function() {
+      return "http://" + config.bridgeIP + "/api/" + config.username;
     };
     this.getBridgeIP = function() {
       return _setup().then(function() {

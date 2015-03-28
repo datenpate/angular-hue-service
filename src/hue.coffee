@@ -15,23 +15,33 @@ angular.module("hue", []).service "hue", [
       deferred = $q.defer()
       if isReady
         deferred.resolve()
+        return deferred.promise
+      if config.username == ""
+        $log.error "Error in setup: Username has to be set"
+        deferred.reject
+        return deferred.promise
+      if config.apiUrl != ""
+        isReady = true
+        deferred.resolve()
+        return deferred.promise
+      if config.bridgeIP != ""
+        config.apiUrl = buildApiUrl()
+        isReady = true
+        deferred.resolve()
       else
-        if config.apiUrl == ""
-          getBridgeNupnp().then (data) ->
-            if data[0]?
-              config.bridgeIP = data[0].internalipaddress
-              config.apiUrl = "http://#{config.bridgeIP}/api/#{config.username}"
-              isReady = true
-              deferred.resolve()
-            else
-              $log.error "Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?"
-              deferred.reject
-          , (error) ->
-            $log.error "Error in setup: #{error}"
+        getBridgeNupnp().then (data) ->
+          # TODO: handle multiple bridges
+          if data[0]?
+            config.bridgeIP = data[0].internalipaddress
+            config.apiUrl = buildApiUrl()
+            isReady = true
+            deferred.resolve()
+          else
+            $log.error "Error in setup: Returned data from nupnp is empty. Is there a hue bridge present in this network?"
             deferred.reject
-        else
-          isReady = true
-          deferred.resolve()
+        , (error) ->
+          $log.error "Error in setup: #{error}"
+          deferred.reject
       deferred.promise
 
     _put = (name, url, data) ->
@@ -105,6 +115,9 @@ angular.module("hue", []).service "hue", [
 
     getBridgeNupnp = ->
       _get "getBridgeNupnp", "https://www.meethue.com/api/nupnp"
+
+    buildApiUrl = () ->
+      "http://#{config.bridgeIP}/api/#{config.username}"
     
     @getBridgeIP = ->
       _setup().then ->
