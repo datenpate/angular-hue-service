@@ -5,7 +5,7 @@ Complete Hue API 1.4.0 (http://www.developers.meethue.com/philips-hue-api) as An
 ```javascript
 // Get all lights
 var myHue = hue;
-myHue.setup({username: "myuser", debug: true});
+myHue.setup({username: "myuser", bridgeIP: "yourbridge", debug: true});
 
 myHue.getLights().then(function(lights) {
   $scope.lights = lights;
@@ -25,6 +25,14 @@ Install Node.js and then
 ```sh
 npm install
 grunt build
+```
+
+## Development
+Install Node.js and then
+
+```sh
+npm install
+grunt
 ```
 
 ## Versioning
