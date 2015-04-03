@@ -1,0 +1,21 @@
+{
+  "name": "angular-hue-service",
+  "version": "1.0.0",
+  "homepage": "https://github.com/datenpate/angular-hue-service",
+  "authors": [
+    "Christian Jellinghaus <chscde@gmail.com>"
+  ],
+  "description": "A AngularJS Service for accessing Philips Hue API",
+  "main": "dist/hue-service.js",
+  "license": "MIT",
+  "dependencies": {
+    "angular": "~1.3.15"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
