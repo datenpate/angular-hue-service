@@ -18,6 +18,10 @@ myHue.getLights().then(function(lights) {
 });
 
 ```
+## Usage
+```bash
+bower install datenpate/angular-hue-service
+```
 
 ## Build
 Install Node.js and then
