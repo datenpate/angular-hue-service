@@ -6,5 +6,8 @@
     "bootstrap": "~3.1",
     "angular-bootstrap": "~0.10.0",
     "angular-bootstrap-slider": "~0.0.8"
+  },
+  "dependencies": {
+    "angular-hue-service": "https://github.com/datenpate/angular-hue-service.git#master"
   }
 }
