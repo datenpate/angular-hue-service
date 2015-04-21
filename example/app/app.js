@@ -20,14 +20,10 @@ angular.module("HueExample", ['hue']).config([
       });
     };
     $scope.triggerAlert = function(light, alert) {
-      return myHue.setLightState(light, {
-        "alert": alert
-      });
+      return myHue.setAlert(light, alert);
     };
     $scope.setEffect = function(light, effect) {
-      return myHue.setLightState(light, {
-        "effect": effect
-      }).then(function() {
+      return myHue.setEffect(light, effect).then(function() {
         return $scope.lights[light].state.effect = effect;
       });
     };

@@ -17,10 +17,10 @@ angular.module "HueExample", ['hue']
         $scope.lights[light].state.on = state
 
     $scope.triggerAlert = (light, alert) ->
-      myHue.setLightState light, {"alert": alert}
+      myHue.setAlert light, alert
 
     $scope.setEffect = (light, effect) ->
-      myHue.setLightState(light, {"effect": effect}).then () ->
+      myHue.setEffect(light, effect).then () ->
         $scope.lights[light].state.effect = effect
 
     changeBrightness = (light, value) ->
