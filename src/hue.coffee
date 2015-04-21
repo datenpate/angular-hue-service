@@ -402,15 +402,15 @@ angular.module("hue", []).service "hue", [
     # light states
 
     # effect: "none"|"colorloop"
-    @setEffect = (id, effect="none") ->
-      setLightState id, {"effect": effect}
+    @setEffect = (id, effect="none") =>
+      this.setLightState id, {"effect": effect}
 
     # alert: "none"|"select"|"lselect"
-    @setAlert = (id, alert="none") ->
-      setLightState id, {"alert": alert}
+    @setAlert = (id, alert="none") =>
+      this.setLightState id, {"alert": alert}
 
-    @setBrightness = (id, brightness) ->
-      setLightState id, {"bri": brightness}
+    @setBrightness = (id, brightness) =>
+      this.setLightState id, {"bri": brightness}
 
     return
 ]

@@ -483,26 +483,32 @@ angular.module("hue", []).service("hue", [
         return _apiCall("get", ["info", "timezones"]);
       });
     };
-    this.setEffect = function(id, effect) {
-      if (effect == null) {
-        effect = "none";
-      }
-      return setLightState(id, {
-        "effect": effect
-      });
-    };
-    this.setAlert = function(id, alert) {
-      if (alert == null) {
-        alert = "none";
-      }
-      return setLightState(id, {
-        "alert": alert
-      });
-    };
-    this.setBrightness = function(id, brightness) {
-      return setLightState(id, {
-        "bri": brightness
-      });
-    };
+    this.setEffect = (function(_this) {
+      return function(id, effect) {
+        if (effect == null) {
+          effect = "none";
+        }
+        return _this.setLightState(id, {
+          "effect": effect
+        });
+      };
+    })(this);
+    this.setAlert = (function(_this) {
+      return function(id, alert) {
+        if (alert == null) {
+          alert = "none";
+        }
+        return _this.setLightState(id, {
+          "alert": alert
+        });
+      };
+    })(this);
+    this.setBrightness = (function(_this) {
+      return function(id, brightness) {
+        return _this.setLightState(id, {
+          "bri": brightness
+        });
+      };
+    })(this);
   }
 ]);
