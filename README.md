@@ -20,7 +20,7 @@ myHue.getLights().then(function(lights) {
 ```
 ## Usage
 ```bash
-bower install datenpate/angular-hue-service
+bower install angular-hue-service
 ```
 
 ## Build
