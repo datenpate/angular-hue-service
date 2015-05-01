@@ -48,7 +48,7 @@
                   Brightness
                 </h4>
                 <p>
-                  <slider ng-model="light.state.bri" min="0" max="255" step="1" value="{{light.state.bri}}" ng-change="changeBrightness(key, light.state.bri)"></slider>
+                  <slider ng-model="light.state.bri" min="0" max="255" step="1" value="light.state.bri" ng-change="changeBrightness(key, light.state.bri)"></slider>
                 </p>
               </li>
               <li class="list-group-item">

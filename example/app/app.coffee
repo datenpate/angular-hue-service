@@ -1,5 +1,5 @@
 "use strict"
-angular.module "HueExample", ['hue']
+angular.module "HueExample", ['hue', 'ui.bootstrap-slider']
 .config ['$logProvider', ($logProvider) ->
   $logProvider.debugEnabled(true);
 ]
