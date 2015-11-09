@@ -1,6 +1,6 @@
 {
   "name": "angular-hue-service",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A AngularJS Service for accessing Philips Hue API (http://www.developers.meethue.com/philips-hue-api)",
   "devDependencies": {
     "coffeelint": "^1.6.1",
